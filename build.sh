@@ -98,7 +98,7 @@ install_dotnet_cli()
         # See https://github.com/dotnet/cli/blob/5f5e3ad74c0c1de7071ba1309dca2ea289691163/scripts/ci_build.sh#L24
         #     https://github.com/dotnet/cli/issues/354
         #
-        if [ -n ${HOME:+1} ]; then
+        if [ -z "${HOME}" ]; then
             export HOME=${__tools_dir}
         fi
     fi
@@ -160,7 +160,7 @@ build_managed_corert()
     __buildproj=$__scriptpath/build.proj
     __buildlog=$__scriptpath/msbuild.$__BuildArch.log
 
-    if [ -n ${ToolchainMilestone:+1} ]; then
+    if [ -z "${ToolchainMilestone}" ]; then
         ToolchainMilestone=testing
     fi
 

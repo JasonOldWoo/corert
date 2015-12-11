@@ -7,7 +7,7 @@ usage()
 }
 
 
-source $(cd "$(dirname "$0")"; pwd -P)/testenv.sh "$@"
+source $(dirname "${BASH_SOURCE}")/testenv.sh "$@"
 
 if [ -z ${CoreRT_BuildOS} ]; then
     export CoreRT_BuildOS=Linux
@@ -34,7 +34,7 @@ export CoreRT_ToolchainVer=1.0.2-prerelease-00001
 export CoreRT_AppDepSdkPkg=toolchain.${__BuildRid}-${CoreRT_BuildArch}.Microsoft.DotNet.AppDep
 export CoreRT_AppDepSdkVer=1.0.2-prerelease-00002
 
-__ScriptDir=$(cd "$(dirname "$0")"; pwd -P)
+__ScriptDir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 __BuildStr=${CoreRT_BuildOS}.${CoreRT_BuildArch}.${CoreRT_BuildType}
 __NuPkgInstallDir=${CoreRT_TestRoot}/../bin/Product/${__BuildStr}/.nuget/publish1
 
