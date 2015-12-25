@@ -166,6 +166,7 @@ build_managed_corert()
     __buildproj=$__scriptpath/build.proj
     __buildlog=$__scriptpath/msbuild.$__BuildArch.log
 
+    echo "Checking ToolchainMilestone=${ToolchainMilestone};"
     if [ -z "${ToolchainMilestone}" ]; then
         ToolchainMilestone=testing
     fi
