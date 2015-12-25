@@ -22,7 +22,7 @@
             <MilestoneVer>$(ToolchainMilestone)-$(VerIncSuffix)</MilestoneVer>
             <MilestoneVer Condition="'$(ToolchainMilestone)'==''">prerelease-$(VerIncSuffix)</MilestoneVer>
             <MilestoneVer Condition="'$(ToolchainMilestone)'=='nightly'">$(ToolchainMilestone)-$([System.DateTime]::UtcNow.ToString(MMdd))</MilestoneVer>
-            <ToolchainVersion>1.0.3-$(MilestoneVer)</ToolchainVersion>
+            <ToolchainVersion>1.0.4-$(MilestoneVer)</ToolchainVersion>
             <RuntimeSdkVersion>$(ToolchainVersion)</RuntimeSdkVersion>
             <NuPkgRid>$(NuPkgRuntimeOS)-$(NuPkgRuntimePlatform)</NuPkgRid>
             
@@ -63,14 +63,24 @@
             <ILCompilerSdkFiles Include="bootstrappercpp" />
             <ILCompilerSdkFiles Include="System.Private.CoreLib.Native" Condition="'$(OsEnvironment)'!='Windows_NT'" />
 
+            <!-- ILCompiler.SDK Cpp Codegen support files -->
+            <ILCompilerSdkCppCodegenFiles Include="Native/inc/unix/sal.h" /> 
+            <ILCompilerSdkCppCodegenFiles Include="Native/gc/env/gcenv.base.h" />
+            <ILCompilerSdkCppCodegenFiles Include="Native/gc/env/gcenv.structs.h" />
+            <ILCompilerSdkCppCodegenFiles Include="Native/Bootstrap/common.h" />
+
             <ILCompilerSdkFilesManaged Include="System.Private.CoreLib" />
+
             <ILCompilerSdkBinPlace Include="@(ILCompilerSdkFiles)">
                 <Text><![CDATA[        <file src="../lib/$(LibPrefix)%(Identity).$(StaticLibExt)" target="runtimes/$(NuPkgRid)/native/sdk/$(LibPrefix)%(Identity).$(StaticLibExt)" /> ]]></Text>
             </ILCompilerSdkBinPlace>
             <ILCompilerSdkBinPlace Include="@(ILCompilerSdkFilesManaged)">
                 <Text><![CDATA[        <file src="../%(Identity).dll" target="runtimes/$(NuPkgRid)/native/sdk/%(Identity).dll" /> ]]></Text>
             </ILCompilerSdkBinPlace>
-
+            <ILCompilerSdkBinPlace Include="@(ILCompilerSdkCppCodegenFiles)">
+                <Text><![CDATA[        <file src="../../../../src/%(Identity)" target="runtimes/$(NuPkgRid)/native/inc/%(Filename)%(Extension)" /> ]]></Text>
+            </ILCompilerSdkBinPlace>
+            
             <!-- ILCompiler nuspec file -->
             <NuSpecFile Include="$(ToolchainPackageName)">
                 <Stage>0</Stage>

@@ -74,6 +74,7 @@ CoreRT_TestRun=true
 CoreRT_TestCompileMode=ryujit
 CoreRT_TestExtRepo=
 CoreRT_BuildExtRepo=
+__dotnetclipath=""
 
 # Use uname to determine what the OS is.
 OSName=$(uname -s)
@@ -96,9 +97,8 @@ case $OSName in
         ;;
 esac
 
-for i in "$@"
-    do
-        lowerI="$(echo $i | awk '{print tolower($0)}')"
+while [ "$1" != "" ]; do
+        lowerI="$(echo $1 | awk '{print tolower($0)}')"
         case $lowerI in
         -?|-h|--help)
             usage
@@ -124,22 +124,27 @@ for i in "$@"
             ;;
         -extrepo)
             shift
-            CoreRT_TestExtRepo=$i
+            CoreRT_TestExtRepo=$1
             ;;
         -mode)
             shift
-            CoreRT_TestCompileMode=$i
+            CoreRT_TestCompileMode=$1
             ;;
         -runtest)
             shift
-            CoreRT_TestRun=$i
+            CoreRT_TestRun=$1
             ;;
         -nocache)
             CoreRT_NuGetOptions=-nocache
             ;;
+        -dotnetclipath) 
+            shift
+            __dotnetclipath=$1
+            ;;
         *)
             ;;
     esac
+    shift
 done
 
 __BuildStr=${CoreRT_BuildOS}.${CoreRT_BuildArch}.${CoreRT_BuildType}
@@ -171,11 +176,8 @@ __BuildOsLowcase=$(echo "${CoreRT_BuildOS}" | tr '[:upper:]' '[:lower:]')
 for json in $(find src -iname 'project.json')
 do
     __restore=1
-    # Disable RyuJIT for OSX.
-    if [ ${__BuildOsLowcase} != "osx" ]; then
-        run_test_dir ${json} ${__restore} "Jit"
-        __restore=0
-    fi
+    run_test_dir ${json} ${__restore} "Jit"
+    __restore=0
     run_test_dir ${json} ${__restore} "Cpp"
 done
 
@@ -196,11 +198,8 @@ echo "</assemblies>"  >> ${__CoreRTTestBinDir}/testResults.xml
 echo "JIT - TOTAL: ${__JitTotalTests} PASSED: ${__JitPassedTests}"
 echo "CPP - TOTAL: ${__CppTotalTests} PASSED: ${__CppPassedTests}"
 
-# Disable RyuJIT for OSX.
-if [ ${__BuildOsLowcase} != "osx" ]; then
-    if [ ${__JitTotalTests} == 0 ]; then
-        exit 1
-    fi
+if [ ${__JitTotalTests} == 0 ]; then
+    exit 1
 fi
 
 if [ ${__CppTotalTests} == 0 ]; then

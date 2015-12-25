@@ -56,10 +56,10 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsProjectNLibrary)' != 'true'">
-    <!-- TODO: For now, drop DEBUG define comming from central location - asserts compiled 
+    <!-- CORERT-TODO: For now, drop DEBUG define comming from central location - asserts compiled 
          into DEBUG builds use interfaces that we are not able to handle yet -->
     <!-- <DefineConstants>CORERT;$(DefineConstants)</DefineConstants> -->
-    <DefineConstants>CORERT</DefineConstants>
+    <DefineConstants>CORERT</DefineConstants>    
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == 'amd64'">
@@ -490,6 +490,15 @@
       <Compile Condition="'$(IsProjectNLibrary)' != 'true'" Include="System\Environment.EnvironmentVariables.Win32.cs" />
       <Compile Include="..\..\Common\src\Interop\Windows\mincore\Interop.Environment.cs" />
   </ItemGroup>
+  <ItemGroup>
+      <!-- CORERT-TODO: Port to Unix -->
+      <Compile Include="..\..\Common\src\Interop\Windows\Interop.Libraries.cs" />
+      <Compile Include="..\..\Common\src\Interop\Windows\mincore\Interop.Errors.cs" />
+      <Compile Include="..\..\Common\src\Interop\Windows\mincore\Interop.MEMORY_BASIC_INFORMATION.cs" />
+      <Compile Include="..\..\Common\src\Interop\Windows\mincore\Interop.VirtualQuery.cs" />
+      <Compile Include="..\..\Common\src\Interop\Windows\mincore\Interop.SYSTEM_INFO.cs" />
+      <Compile Include="..\..\Common\src\Interop\Windows\mincore\Interop.GetNativeSystemInfo.cs" />
+  </ItemGroup>
 
   <ItemGroup Condition="'$(TargetsUnix)'=='true'">
       <Compile Include="System\Globalization\CultureInfo.Dummy.cs" />
@@ -528,11 +537,14 @@
     <Compile Include="CoverageSupport.cs" />
   </ItemGroup>
 
-  <!-- For now, link Runtime.Base into System.Private.CoreLib until there is proper multifile build -->
-  <PropertyGroup Condition="'$(IsProjectNLibrary)' != 'true'">
+  <!-- For now, link Runtime.Base into System.Private.CoreLib for CoreRT until there is proper multifile build -->
+  <PropertyGroup Condition="'$(IsProjectNLibrary)' != 'true' and '$(RazzleToolPath)' == ''">
+    <InPlaceRuntime>true</InPlaceRuntime>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(InPlaceRuntime)' == 'true'">
     <DefineConstants>INPLACE_RUNTIME;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(IsProjectNLibrary)' != 'true'">
+  <ItemGroup Condition="'$(InPlaceRuntime)' == 'true'">
     <Compile Include="..\..\Runtime.Base\src\System\Runtime\CachedInterfaceDispatch.cs" />
     <Compile Include="..\..\Runtime.Base\src\System\Runtime\DispatchResolve.cs" />
     <Compile Include="..\..\Runtime.Base\src\System\Runtime\GCStress.cs" />
@@ -549,7 +561,7 @@
     <Compile Include="..\..\Runtime.Base\src\RhBaseName.cs" />
     <Compile Include="..\..\Common\src\Internal\Runtime\EEType.Constants.cs" />
   </ItemGroup>
-  <ItemGroup Condition="'$(IsProjectNLibrary)' != 'true'">
+  <ItemGroup Condition="'$(InPlaceRuntime)' == 'true'">
     <Compile Include="$(BaseIntermediateOutputPath)\Native\$(BinDirOSGroup).$(BinDirPlatform).$(BinDirConfiguration)\Runtime\Full\AsmOffsets.cs" />
   </ItemGroup>
 
