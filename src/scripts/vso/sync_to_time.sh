@@ -16,7 +16,7 @@ sync_to_time()
         usage
         exit 1
     fi      
-    local sync_time=$(date +"%a %b %m ${1} %Y %z")
+    local sync_time=$(date +"%a %b %d ${1} %Y %z")
     local current_branch=$(git rev-parse --abbrev-ref HEAD)
     local commit_hash=$(git rev-list -n 1 --before="${sync_time}" "${current_branch}")
     if [[ -z ${commit_hash} ]]; then
