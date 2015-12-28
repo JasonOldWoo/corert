@@ -14,20 +14,12 @@ param (
 
 $Microsoft_DotNet_ILCompiler = "Microsoft.DotNet.ILCompiler"
 $Microsoft_DotNet_ILCompiler_SDK = $Microsoft_DotNet_ILCompiler + ".SDK"
-$Microsoft_DotNet_ILCompiler_SDK_Debug = $Microsoft_DotNet_ILCompiler_SDK + ".Debug"
 
-$ListGrepStr = 
+$ListGrepStr = $Microsoft_DotNet_ILCompiler
 $RootPackages = @(
     $Microsoft_DotNet_ILCompiler,
-    $Microsoft_DotNet_ILCompiler_SDK,
-    $Microsoft_DotNet_ILCompiler_SDK_Debug
+    $Microsoft_DotNet_ILCompiler_SDK
 )
-
-$NuGetOutput = Invoke-Expression "$NuGetExe list -Source $NuGetSrc $ListGrepStr -PreRelease"
-if ($LastExitCode -ne 0) {
-    Write-Host "Error: nuget list $ListGrepStr"
-    Throw
-}
 
 $Rids = @(
     "win7-x64",
@@ -35,6 +27,7 @@ $Rids = @(
     "osx.10.10-x64"
 )
 
+# Get the package name strings
 $PackageGrepStr = @()
 for ($i = 0; $i -lt $Rids.length; $i++) {
     for ($j=0; $j -lt $RootPackages.length; $j++) {
@@ -42,25 +35,50 @@ for ($i = 0; $i -lt $Rids.length; $i++) {
     }
 }
 
+$MaxRetries = 5
+$PushedPackages = $False
 $TotalMatches = 0
-for ($i = 0; $i -lt $PackageGrepStr.length; $i++) {
-    $count = ([regex]::Matches($NuGetOutput, $PackageGrepStr[$i])).count
-    if ($count -eq 0) {
-        Write-Host "Package not found in feed: " $PackageGrepStr[$i] -ForeGroundColor Red
+$ExpectedMatches = $PackageGrepStr.length
+for ($Retries = 0; $Retries -le $MaxRetries; $Retries++) {
+    $NuGetOutput = Invoke-Expression "$NuGetExe list -Source $NuGetSrc $ListGrepStr -PreRelease"
+    if ($LastExitCode -ne 0) {
+        Write-Host "Error: nuget list $ListGrepStr"
+        Throw
     }
-    $TotalMatches += $count;
+
+    # Compare the name strings with nuget list output
+    for ($i = 0; $i -lt $PackageGrepStr.length; $i++) {
+        $count = ([regex]::Matches($NuGetOutput, $PackageGrepStr[$i])).count
+        if ($count -eq 0) {
+            Write-Host "Package not found in feed: " $PackageGrepStr[$i] -ForeGroundColor Red
+        }
+        $TotalMatches += $count;
+    }
+
+    If ($TotalMatches -eq $ExpectedMatches) {
+        Push-Packages -PushPackages $RootPackages -NuPkgDir $NuPkgDir -Version $Version
+        $PushedPackages = $True
+        Write-Host "Packages $RootPackages.length pushed successfully!"
+        Break
+    } Else {
+        # Wait 10 minutes
+        Start-Sleep -s 600
+    }    
 }
 
-$ExpectedMatches = $PackageGrepStr.length
+If ($PushedPackages != $True) {
+    Write-Host "Error: Not all platform packages were found in the feed (actual: $TotalMatches, expected: $ExpectedMatches). Will not push root packages." -BackgroundColor Red
+    Throw
+}
 
-If ($TotalMatches -eq $ExpectedMatches) {
-    $PushPackages = @($Microsoft_DotNet_ILCompiler)
-    If ($Configuration -eq "Debug") {
-        $PushPackages += $Microsoft_DotNet_ILCompiler_SDK_Debug
-    } Else {
-        $PushPackages += $Microsoft_DotNet_ILCompiler_SDK
-    }
 
+#------------------------------------------------------------------------
+function Push-Packages {
+    param(
+        [string[]] $PushPackages = @()
+        [string] $NuPkgDir = ""
+        [string] $Version = ""
+    )
     for ($j=0; $j -lt $PushPackages.length; $j++) {
         $command = "$NuGetExe push `"$NuPkgDir" + $PushPackages[$j] + ".$Version.nupkg`" $NuGetAuth -Source $NuGetSrc"
         Write-Host $command
@@ -70,7 +88,4 @@ If ($TotalMatches -eq $ExpectedMatches) {
             Throw
         }
     }
-} Else {
-    Write-Host "Error: Not all platform packages were found in the feed (actual: $TotalMatches, expected: $ExpectedMatches). Will not push root packages." -BackgroundColor Red
-    Throw
 }

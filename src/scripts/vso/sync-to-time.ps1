@@ -4,7 +4,7 @@
 #
 
 param (
-    [string] $Time = "18:00:00"
+    [string] $Time = Get-Date().hour + ":00:00"
 )
 
 $PstZone = [System.TimeZoneInfo]::FindSystemTimeZoneById("Pacific Standard Time")

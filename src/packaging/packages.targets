@@ -322,17 +322,17 @@
             <NuPkgFilesDir Condition="'$(OSEnvironment)'=='Unix'">../bin/Product/$(OsPlatformConfig)/.nuget/</NuPkgFilesDir>
         </PropertyGroup>
         <ItemGroup>
-            <NuPkgFilesToPush Include="%(NuSpecCollection.PlatformNuPkg)" Condition="$(CoreRT_NightlyPushRedirPackage) == '' And '%(NuSpecCollection.Push)'=='1'" />
-            <NuPkgFilesToPush Include="%(NuSpecCollection.RedirNuPkg)" Condition="$(CoreRT_NightlyPushRedirPackage) != '' And '%(NuSpecCollection.Push)'=='1'" />
+            <NuPkgFilesToPush Include="%(NuSpecCollection.PlatformNuPkg)" Condition="'%(NuSpecCollection.Push)'=='1'" />
         </ItemGroup>
+        <Message Text="$(CoreRT_NightlyFeedAuth); " Importance="High" />
         <Error
             Text="Could not push daily builds to the $(CoreRT_NightlyPushUrl) because CoreRT_NightlyFeedAuth is empty."
             Condition="'$(ToolchainMilestone)'=='nightly' And '$(CoreRT_NightlyFeedAuth)'==''" />
         <Exec Command="&quot;$(NuGetToolPath)&quot; push &quot;$(NuPkgFilesDir)%(NuPkgFilesToPush.Identity)&quot; $(CoreRT_NightlyFeedAuth) -Source $(CoreRT_NightlyPushUrl)"
-              Condition="'$(CoreRT_NightlyPushRedir)'=='' And '$(CoreRT_NightlyFeedAuth)'!='' And '$(ToolchainMilestone)'=='nightly'" />
+              Condition="'$(CoreRT_NightlyFeedAuth)'!='' And '$(ToolchainMilestone)'=='nightly'" />
 
         <Exec Command="powershell.exe -NonInteractive -ExecutionPolicy Unrestricted -Command &quot;&amp; { &amp;&apos;$(ProjectDir)/src/packaging/nightly-push.ps1&apos; -NuGetExe &apos;$(NuGetToolPath)&apos; -NuPkgDir &apos;$(ProductPackageDir)&apos; -NuGetSrc &apos;$(CoreRT_NightlyFeedUrl)&apos; -NuGetAuth &apos;$(CoreRT_NightlyFeedAuth)&apos; -Configuration &apos;$(Configuration)&apos; -Version &apos;$(ToolchainVersion)&apos; } &quot;"
               IgnoreExitCode="false"
-              Condition="'$(CoreRT_NightlyPushRedir)'!='' And '$(CoreRT_NightlyFeedAuth)'!='' And '$(ToolchainMilestone)'=='nightly' And '$(OsEnvironment)'=='Windows_NT'" />
+              Condition="'$(CoreRT_NightlyFeedAuth)'!='' And '$(ToolchainMilestone)'=='nightly' And '$(OsEnvironment)'=='Windows_NT'" />
     </Target>
 </Project>
