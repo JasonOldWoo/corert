@@ -1,4 +1,5 @@
 @echo off
+set
 setlocal EnableDelayedExpansion
 
 :: Set the default arguments for build
